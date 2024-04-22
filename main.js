@@ -39,6 +39,13 @@ var app = new Vue({
                 this.logs.unshift((new Date()).toTimeString() + ' - Connected!')
                 this.connected = true
                 this.loading = false
+
+                //init camera
+                this.setCamera({
+                    suffixHost: '/cameras',
+                    topic: '/camera/image_raw',  
+                    divID: 'divCamera',  
+                });
             })
             this.ros.on('error', (error) => {
                 this.logs.unshift((new Date()).toTimeString() + ` - Error: ${error}`)
@@ -119,6 +126,40 @@ var app = new Vue({
             this.joystick.vertical = 0
             this.joystick.horizontal = 0
             this.pubSpeed(this.joystick.vertical, this.joystick.horizontal)
+        },
+
+        // set camera
+        setCamera: function(options) {
+            options = options || {};
+            let topic = options.topic || '/camera/image_raw';  // Default topic
+            let divID = options.divID || 'divCamera';              // Default DIV ID
+            let surfix_host = options.suffixHost;                               // Host must be provided, no default
+
+            if (!surfix_host) {
+                console.error('Surfix_host parameter is required.');
+                return; // Exit the function if no host is provided
+            }
+
+            //get domain
+            let without_wss = this.rosbridge_address.split('wss://')[1]
+            console.log('URL without WSS:', without_wss);
+
+            let domain = without_wss.split('/')[0] + '/' + without_wss.split('/')[1]
+            let host = domain + surfix_host
+
+            console.log('Domain:', domain); 
+            console.log('Host:', host); 
+            let width = options.width || 320;   // Default width
+            let height = options.height || 240; // Default height
+
+            let viewer = new MJPEGCANVAS.Viewer({
+                divID: divID,
+                host: host,
+                width: width,
+                height: height,
+                topic: topic,
+                ssl: true,
+            });
         },
     },
     mounted() {
