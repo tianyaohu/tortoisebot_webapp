@@ -64,6 +64,21 @@ var app = new Vue({
             })
             topic.publish(message)
         },
+
+        // pub speed with parameters for linear x and angular z velocity
+        pubSpeed: function(lin_x, ang_z) {
+            let topic = new ROSLIB.Topic({
+                ros: this.ros,
+                name: '/cmd_vel',
+                messageType: 'geometry_msgs/Twist'
+            });
+            let message = new ROSLIB.Message({
+                linear: { x: lin_x, y: 0, z: 0 },
+                angular: { x: 0, y: 0, z: ang_z }
+            });
+            topic.publish(message);
+        },
+
         startDrag() {
             this.dragging = true
             this.x = this.y = 0
@@ -97,10 +112,13 @@ var app = new Vue({
         setJoystickVals() {
             this.joystick.vertical = -1 * ((this.y / 200) - 0.5)
             this.joystick.horizontal = +1 * ((this.x / 200) - 0.5)
+            //send joystick speed
+            this.pubSpeed(this.joystick.vertical, -1*this.joystick.horizontal)
         },
         resetJoystickVals() {
             this.joystick.vertical = 0
             this.joystick.horizontal = 0
+            this.pubSpeed(this.joystick.vertical, this.joystick.horizontal)
         },
     },
     mounted() {
