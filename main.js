@@ -9,6 +9,20 @@ var app = new Vue({
         rosbridge_address: 'wss://i-0534cd53ae70b422c.robotigniteacademy.com/0209b84c-f48b-4e08-a7ef-f97390784837/rosbridge/',
         port: '9090',
 
+        //action server
+        goal: null,
+        action: {
+            goal: { position: {x: 0, y: 0, z: 0} },
+            feedback: { position: 0, state: 'idle' },
+            result: { success: false },
+            status: { status: 0, text: '' },
+        },
+
+        // 3D stuff
+        viewer: null,
+        tfClient: null,
+        urdfClient: null,
+
         //slam mapping
         map_viewer:null,
         mapGridClient:null,
@@ -55,6 +69,9 @@ var app = new Vue({
 
                 //init map viewer
                 this.initMapViewer()
+
+                //init 3D viewer
+                this.setup3DViewer()
             })
             this.ros.on('error', (error) => {
                 this.logs.unshift((new Date()).toTimeString() + ` - Error: ${error}`)
@@ -64,7 +81,45 @@ var app = new Vue({
                 this.connected = false
                 this.loading = false
                 document.getElementById('map').innerHTML = ''
+                //reset 3D model
+                this.unset3DViewer()
+                //reset cam
+                document.getElementById('divCamera').innerHTML = ''
             })
+        },
+
+        sendGoal: function() {
+            console.log("tryhing to send goal")
+
+            let actionClient = new ROSLIB.ActionClient({
+                ros : this.ros,
+                serverName : '/tortoisebot_as/',
+                actionName : 'course_web_dev_ros/WaypointActionAction'
+            })
+
+            this.goal = new ROSLIB.Goal({
+                actionClient : actionClient,
+                goalMessage: {
+                    ...this.action.goal
+                }
+            })
+
+            this.goal.on('status', (status) => {
+                this.action.status = status
+            })
+
+            this.goal.on('feedback', (feedback) => {
+                this.action.feedback = feedback
+            })
+
+            this.goal.on('result', (result) => {
+                this.action.result = result
+            })
+
+            this.goal.send()
+        },
+        cancelGoal: function() {
+            this.goal.cancel()
         },
 
         initMapViewer: function(){
@@ -85,6 +140,52 @@ var app = new Vue({
                 this.mapViewer.scaleToDimensions(this.mapGridClient.currentGrid.width, this.mapGridClient.currentGrid.height);
                 this.mapViewer.shift(this.mapGridClient.currentGrid.pose.position.x, this.mapGridClient.currentGrid.pose.position.y)
             })
+        },
+
+        setup3DViewer() {
+            this.viewer = new ROS3D.Viewer({
+                background: '#cccccc',
+                divID: 'div3DViewer',
+                width: 400,
+                height: 300,
+                antialias: true,
+                fixedFrame: 'odom'
+            })
+
+            // Add a grid.
+            this.viewer.addObject(new ROS3D.Grid({
+                color:'#0181c4',
+                cellSize: 0.5,
+                num_cells: 20
+            }))
+
+            // Setup a client to listen to TFs.
+            this.tfClient = new ROSLIB.TFClient({
+                ros: this.ros,
+                angularThres: 0.01,
+                transThres: 0.01,
+                rate: 10.0
+            })
+
+            console.log("location", location)
+            console.log("location.origin", location.origin)
+            console.log("location.pathname", location.pathname)
+
+            // Setup the URDF client.
+            this.urdfClient = new ROS3D.UrdfClient({
+                ros: this.ros,
+                param: 'robot_description',
+                tfClient: this.tfClient,
+                // We use "path: location.origin + location.pathname"
+                // instead of "path: window.location.href" to remove query params,
+                // otherwise the assets fail to load
+                path: location.origin + location.pathname,
+                rootObject: this.viewer.scene,
+                loader: ROS3D.COLLADA_LOADER_2
+            })
+        },
+        unset3DViewer() {
+            document.getElementById('div3DViewer').innerHTML = ''
         },
 
         disconnect: function() {
