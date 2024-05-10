@@ -26,6 +26,7 @@ var app = new Vue({
         //slam mapping
         map_viewer:null,
         mapGridClient:null,
+        imClient:null, //interactive marker client
         interval:null,
 
         // Dragzone Data
@@ -45,7 +46,9 @@ var app = new Vue({
         joystick: {
             vertical: 0,
             horizontal: 0,
-        }
+        },
+
+        clickableObjects: [],
     },
     // helper methods to connect to ROS
     methods: {
@@ -68,10 +71,14 @@ var app = new Vue({
                 });
 
                 //init map viewer
-                this.initMapViewer()
+                // this.initMapViewer()
 
                 //init 3D viewer
                 this.setup3DViewer()
+
+                // Add this listener to the canvas used by your viewer
+                // this.viewer.renderer.domElement.addEventListener('mousedown', this.onDocumentMouseDown.bind(this), false);
+                this.setupMarkerUpdateLogger()
             })
             this.ros.on('error', (error) => {
                 this.logs.unshift((new Date()).toTimeString() + ` - Error: ${error}`)
@@ -80,12 +87,25 @@ var app = new Vue({
                 this.logs.unshift((new Date()).toTimeString() + ' - Disconnected!')
                 this.connected = false
                 this.loading = false
-                document.getElementById('map').innerHTML = ''
                 //reset 3D model
-                this.unset3DViewer()
+                this.clear3DViewer()
                 //reset cam
                 document.getElementById('divCamera').innerHTML = ''
             })
+        },
+
+        setupMarkerUpdateLogger: function() {
+            var listener = new ROSLIB.Topic({
+                ros: this.ros,  // Assuming 'ros' is your ROSLIB.Ros instance connected to rosbridge
+                name: '/simple_marker/update',
+                messageType: 'visualization_msgs/InteractiveMarkerUpdate'
+            });
+
+            listener.subscribe(function(message) {
+                console.log('Received message on /simple_marker/update:', message);
+                // Optionally, you can unsubscribe if you only want to check a few messages
+                // listener.unsubscribe();
+            });
         },
 
         sendGoal: function() {
@@ -139,37 +159,72 @@ var app = new Vue({
             this.mapGridClient.on('change', () => {
                 this.mapViewer.scaleToDimensions(this.mapGridClient.currentGrid.width, this.mapGridClient.currentGrid.height);
                 this.mapViewer.shift(this.mapGridClient.currentGrid.pose.position.x, this.mapGridClient.currentGrid.pose.position.y)
+                this.mapViewer.scene.scaleX *= 4; 
+                this.mapViewer.scene.scaleY *= 4;  
             })
         },
 
-        setup3DViewer() {
+        // ==============================================================
+        // ################# START 3D VIEWER SECTION ####################
+        // ==============================================================
+
+        setup3DViewer: function(fixed_frame = 'map') {
             this.viewer = new ROS3D.Viewer({
                 background: '#cccccc',
                 divID: 'div3DViewer',
                 width: 400,
                 height: 300,
                 antialias: true,
-                fixedFrame: 'odom'
+                fixedFrame: fixed_frame
             })
 
             // Add a grid.
             this.viewer.addObject(new ROS3D.Grid({
                 color:'#0181c4',
-                cellSize: 0.5,
+                cellSize: 0.25,
                 num_cells: 20
             }))
 
             // Setup a client to listen to TFs.
             this.tfClient = new ROSLIB.TFClient({
                 ros: this.ros,
+                fixedFrame: fixed_frame,
                 angularThres: 0.01,
                 transThres: 0.01,
                 rate: 10.0
             })
 
-            console.log("location", location)
-            console.log("location.origin", location.origin)
-            console.log("location.pathname", location.pathname)
+            // Add OccupancyGridClient
+            this.gridClient = new ROS3D.OccupancyGridClient({
+                ros: this.ros,
+                rootObject: this.viewer.scene,
+                continuous: true,
+                tfClient: this.tfClient,
+                topic: '/map'  // Set the appropriate topic for your occupancy grid
+            });
+
+            //add interactive Marker Client
+            var imClient = new ROS3D.InteractiveMarkerClient({
+                ros: this.ros,
+                tfClient: this.tfClient,
+                topic: '/simple_marker',  // Correct topic for the interactive markers
+                camera: this.viewer.camera,
+                rootObject: this.viewer.selectableObjects
+            });
+
+            this.viewer.scene.addEventListener('click', function(event) {
+                // Assuming raycaster and mouse are set up to handle the Three.js scene interaction
+                raycaster.setFromCamera(mouse, camera);
+                var intersects = raycaster.intersectObjects(viewer.selectableObjects.children, true);
+
+                if (intersects.length > 0) {
+                    console.log('Marker clicked!', intersects[0].object);
+                    // Additional logic here
+                }
+            });
+
+            this.viewer.camera.lookAt(new THREE.Vector3(1, 1, 0)); // Updated to look directly at the sphere's position
+            this.viewer.camera.updateProjectionMatrix();
 
             // Setup the URDF client.
             this.urdfClient = new ROS3D.UrdfClient({
@@ -184,14 +239,30 @@ var app = new Vue({
                 loader: ROS3D.COLLADA_LOADER_2
             })
         },
-        unset3DViewer() {
-            document.getElementById('div3DViewer').innerHTML = ''
+
+        clear3DViewer: function() {
+            if (this.viewer) {
+                // Dispose of all objects in the scene
+                while(this.viewer.scene.children.length > 0) { 
+                    const object = this.viewer.scene.children[0];
+                    if (object.geometry) object.geometry.dispose();
+                    if (object.material) object.material.dispose();
+                    this.viewer.scene.remove(object);
+                }
+                this.viewer.renderer.dispose(); // Dispose of the renderer
+                this.viewer = null; // Remove reference to the viewer
+                document.getElementById('div3DViewer').innerHTML = ''; // Clear the HTML
+            }
         },
+
+        // ==============================================================
+        // ################# END of 3D VIEWER SECTION ###################
+        // ==============================================================
 
         disconnect: function() {
             this.ros.close()
         },
-                sendCommand: function() {
+        sendCommand: function() {
             let topic = new ROSLIB.Topic({
                 ros: this.ros,
                 name: '/cmd_vel',
