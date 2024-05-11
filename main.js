@@ -70,9 +70,6 @@ var app = new Vue({
                     divID: 'divCamera',  
                 });
 
-                //init map viewer
-                // this.initMapViewer()
-
                 //init 3D viewer
                 this.setup3DViewer()
 
@@ -142,38 +139,21 @@ var app = new Vue({
             this.goal.cancel()
         },
 
-        initMapViewer: function(){
-            // init map viewer
-            this.mapViewer = new ROS2D.Viewer({
-                divID:'map',
-                width:420,
-                height:360
-            })
-            // Setup the map client.
-            this.mapGridClient = new ROS2D.OccupancyGridClient({
-                ros: this.ros,
-                rootObject: this.mapViewer.scene,
-                continuous: true,
-            })
-            // Scale the canvas to fit to the map
-            this.mapGridClient.on('change', () => {
-                this.mapViewer.scaleToDimensions(this.mapGridClient.currentGrid.width, this.mapGridClient.currentGrid.height);
-                this.mapViewer.shift(this.mapGridClient.currentGrid.pose.position.x, this.mapGridClient.currentGrid.pose.position.y)
-                this.mapViewer.scene.scaleX *= 4; 
-                this.mapViewer.scene.scaleY *= 4;  
-            })
-        },
-
         // ==============================================================
         // ################# START 3D VIEWER SECTION ####################
         // ==============================================================
 
         setup3DViewer: function(fixed_frame = 'map') {
+            var width = Math.max(document.getElementById('div3DViewer').clientWidth, 300); // Ensuring a minimum width of 300
+            var height = Math.max(document.getElementById('div3DViewer').clientWidth, 200); // Ensuring a minimum height of 200
+
+            console.log("Initializing ROS3D.Viewer with width: " + width + " and height: " + height);
+
             this.viewer = new ROS3D.Viewer({
                 background: '#cccccc',
                 divID: 'div3DViewer',
-                width: 400,
-                height: 300,
+                width: 800,
+                height: 600,
                 antialias: true,
                 fixedFrame: fixed_frame
             })
@@ -252,6 +232,14 @@ var app = new Vue({
                 this.viewer.renderer.dispose(); // Dispose of the renderer
                 this.viewer = null; // Remove reference to the viewer
                 document.getElementById('div3DViewer').innerHTML = ''; // Clear the HTML
+            }
+        },
+
+        resizeViewer: function() {
+            if (this.viewer) {
+                var width = Math.max(document.getElementById('div3DViewer').clientWidth, 300);
+                var height = Math.max(document.getElementById('div3DViewer').clientHeight, 200);
+                this.viewer.resize(width, height);
             }
         },
 
@@ -368,5 +356,9 @@ var app = new Vue({
     mounted() {
         // page is ready
         window.addEventListener('mouseup', this.stopDrag)
+        window.addEventListener('resize', this.resizeViewer);
     },
+    beforeDestroy: function() {
+        window.removeEventListener('resize', this.resizeViewer);
+    }
 })
