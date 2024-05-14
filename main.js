@@ -6,6 +6,7 @@ var app = new Vue({
         ros: null,
         logs: [],
         loading: false,
+        showConnectionPanel: true,
         rosbridge_address: 'wss://i-0534cd53ae70b422c.robotigniteacademy.com/0209b84c-f48b-4e08-a7ef-f97390784837/rosbridge/',
         port: '9090',
 
@@ -18,16 +19,12 @@ var app = new Vue({
             status: { status: 0, text: '' },
         },
 
-        // 3D stuff
+        // 3D all in one viewer
         viewer: null,
         tfClient: null,
         urdfClient: null,
-
-        //slam mapping
-        map_viewer:null,
-        mapGridClient:null,
-        imClient:null, //interactive marker client
-        interval:null,
+        imClient:null, 
+        cameraViewer: null, 
 
         // Dragzone Data
         dragging: false,
@@ -52,6 +49,17 @@ var app = new Vue({
     },
     // helper methods to connect to ROS
     methods: {
+        //============== START of WEB UI Element Control ==================
+        toggleConnectionPanel: function() {
+            this.showConnectionPanel = !this.showConnectionPanel;
+            //since toggle_panel change layout of the websize, changing the all the viewer's size too
+            this.$nextTick(() => {
+                this.resizeViewer();
+            });
+        },
+
+        //============== END of WEB UI Element Control ==================
+
         connect: function() {
             this.loading = true
             this.ros = new ROSLIB.Ros({
@@ -76,6 +84,9 @@ var app = new Vue({
                 // Add this listener to the canvas used by your viewer
                 // this.viewer.renderer.domElement.addEventListener('mousedown', this.onDocumentMouseDown.bind(this), false);
                 this.setupMarkerUpdateLogger()
+
+                //toggle connection panel
+                this.toggleConnectionPanel();
             })
             this.ros.on('error', (error) => {
                 this.logs.unshift((new Date()).toTimeString() + ` - Error: ${error}`)
@@ -241,6 +252,12 @@ var app = new Vue({
                 var height = Math.max(document.getElementById('div3DViewer').clientHeight, 200);
                 this.viewer.resize(width, height);
             }
+            if (this.cameraViewer) {
+                var cameraWidth = Math.max(document.getElementById('divCamera').clientWidth, 320);
+                var cameraHeight = Math.max(document.getElementById('divCamera').clientHeight, 240);
+                this.cameraViewer.setWidth(cameraWidth);
+                this.cameraViewer.setHeight(cameraHeight);
+            }
         },
 
         // ==============================================================
@@ -324,26 +341,18 @@ var app = new Vue({
             options = options || {};
             let topic = options.topic || '/camera/image_raw';  // Default topic
             let divID = options.divID || 'divCamera';              // Default DIV ID
-            let surfix_host = options.suffixHost;                               // Host must be provided, no default
-
-            if (!surfix_host) {
-                console.error('Surfix_host parameter is required.');
+            let suffixHost = options.suffixHost;                               // Host must be provided, no default
+            if (!suffixHost) {
+                console.error('Suffix_host parameter is required.');
                 return; // Exit the function if no host is provided
             }
-
-            //get domain
-            let without_wss = this.rosbridge_address.split('wss://')[1]
-            console.log('URL without WSS:', without_wss);
-
-            let domain = without_wss.split('/')[0] + '/' + without_wss.split('/')[1]
-            let host = domain + surfix_host
-
-            console.log('Domain:', domain); 
-            console.log('Host:', host); 
+            let without_wss = this.rosbridge_address.split('wss://')[1];
+            let domain = without_wss.split('/')[0] + '/' + without_wss.split('/')[1];
+            let host = domain + suffixHost;
             let width = options.width || 320;   // Default width
             let height = options.height || 240; // Default height
 
-            let viewer = new MJPEGCANVAS.Viewer({
+            this.cameraViewer = new MJPEGCANVAS.Viewer({
                 divID: divID,
                 host: host,
                 width: width,

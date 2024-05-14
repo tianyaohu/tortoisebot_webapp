@@ -32,8 +32,11 @@
 
 <body>
     <div id="app" class="container-fluid">
+        <button class="btn btn-info mb-2" @click="toggleConnectionPanel">Toggle Connection Panel</button>
+
         <div class="row">
-            <div class="col-3 text-center">
+            <!-- Connection Column -->
+            <div class="col-3 text-center" v-show="showConnectionPanel">
                 <div class="card mt-1">
                     <div class="card-body">
                         <h3>Connection status</h3>
@@ -50,14 +53,16 @@
                 </div>
                 <div class="card mt-2">
                     <div class="card-header">
-                        <h4>Logs</h5>
+                        <h4>Logs</h4>
                     </div>
                     <div class="card-body">
                         <p v-for="log in logs">{{ log }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-9">
+
+            <!-- Main Content (3D viewer, camera, control etc.)  -->
+            <div :class="showConnectionPanel ? 'col-9' : 'col-12'">
                 <div class="row">
                     <div class="col-12">
                         <div class="card mt-2">
@@ -71,7 +76,7 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-4">
+                    <div class="col-8">
                         <div class="card mt-2">
                             <div class="card-header">
                                 <h4>Camera</h4>
@@ -83,7 +88,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-8">
+                    <div class="col-4">
                         <div class="card mt-2">
                             <div class="card-header">
                                 <h4>Commands</h4>
@@ -93,56 +98,53 @@
                                     <h2 class="text-center">Joystick</h2>
                                     <hr>
                                     <p>Some actions for the robot</p>
-                                    <div id="dragstartzone" @mousedown="startDrag" @mousemove="doDrag">
-                                    </div>
+                                    <div id="dragstartzone" @mousedown="startDrag" @mousemove="doDrag"></div>
                                     <div id="dragCircle" :style="dragCircleStyle"></div>
                                 </div>
-                            </div>
-                            <div class="card-body">
-                                <h3 class="text-left">Joystick values</h2>
+                                <div class="card-body">
+                                    <h3 class="text-left">Joystick values</h3>
                                     <hr />
                                     <p>Vertical: {{ joystick.vertical.toFixed(3) }}</p>
                                     <br />
                                     <p>Horizontal: {{ joystick.horizontal.toFixed(3) }}</p>
-                            </div>
-
-                            <div>
-                                <label>Goal</label>
-                                <div>
-                                    <label>X</label>
-                                    <input type="number" v-model.number="action.goal.position.x" />
                                 </div>
                                 <div>
-                                    <label>Y</label>
-                                    <input type="number" v-model.number="action.goal.position.y" />
+                                    <label>Goal</label>
+                                    <div>
+                                        <label>X</label>
+                                        <input type="number" v-model.number="action.goal.position.x" />
+                                    </div>
+                                    <div>
+                                        <label>Y</label>
+                                        <input type="number" v-model.number="action.goal.position.y" />
+                                    </div>
+                                    <button :disabled="!connected || action.status.status == 1"
+                                        @click="sendGoal">Start</button>
+                                    <button :disabled="!connected || ![1].includes(action.status.status)"
+                                        @click="cancelGoal">Cancel</button>
                                 </div>
-                                <button :disabled="!connected || action.status.status == 1"
-                                    @click="sendGoal">Start</button>
-                                <button :disabled="!connected || ![1].includes(action.status.status)"
-                                    @click="cancelGoal">Cancel</button>
-                            </div>
-                            <hr />
-                            <div>
-                                <label class="text-muted">Feedback</label>
-                                <p>Position: {{ action.feedback.position }}</p>
-                                <p>State: {{ action.feedback.state }}</p>
-                            </div>
-                            <hr />
-                            <div>
-                                <label class="text-muted">Result</label>
-                                <p>Succeeded? {{ action.result.success }}</p>
-                            </div>
-                            <hr />
-                            <div>
-                                <label class="text-muted">Status</label>
-                                <p>{{ action.status.text }}</p>
+                                <hr />
+                                <div>
+                                    <label class="text-muted">Feedback</label>
+                                    <p>Position: {{ action.feedback.position }}</p>
+                                    <p>State: {{ action.feedback.state }}</p>
+                                </div>
+                                <hr />
+                                <div>
+                                    <label class="text-muted">Result</label>
+                                    <p>Succeeded? {{ action.result.success }}</p>
+                                </div>
+                                <hr />
+                                <div>
+                                    <label class="text-muted">Status</label>
+                                    <p>{{ action.status.text }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
     </div>
     ​
     <script type="text/javascript">
