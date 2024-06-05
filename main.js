@@ -252,12 +252,6 @@ var app = new Vue({
                 var height = Math.max(document.getElementById('div3DViewer').clientHeight, 200);
                 this.viewer.resize(width, height);
             }
-            if (this.cameraViewer) {
-                var cameraWidth = Math.max(document.getElementById('divCamera').clientWidth, 320);
-                var cameraHeight = Math.max(document.getElementById('divCamera').clientHeight, 240);
-                this.cameraViewer.setWidth(cameraWidth);
-                this.cameraViewer.setHeight(cameraHeight);
-            }
         },
 
         // ==============================================================
@@ -349,9 +343,8 @@ var app = new Vue({
             let without_wss = this.rosbridge_address.split('wss://')[1];
             let domain = without_wss.split('/')[0] + '/' + without_wss.split('/')[1];
             let host = domain + suffixHost;
-            let width = options.width || 320;   // Default width
-            let height = options.height || 240; // Default height
-
+            let width = Math.max(document.getElementById('divCamera').clientWidth, 480);
+            let height = Math.max(document.getElementById('divCamera').clientHeight, 240);
             this.cameraViewer = new MJPEGCANVAS.Viewer({
                 divID: divID,
                 host: host,

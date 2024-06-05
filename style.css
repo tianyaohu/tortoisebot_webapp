@@ -25,3 +25,39 @@
 #dragCircle:hover {
     background-color: lightcoral;
 }
+
+.joystick-container {
+    position: absolute;
+    bottom: 10px;
+    /* Adjust as needed */
+    right: 10px;
+    /* Adjust as needed */
+    background: rgba(255, 255, 255, 0.3);
+    /* Optional: for better visibility */
+    padding: 10px;
+    /* Optional: for better spacing */
+    border-radius: 5px;
+    /* Optional: for rounded corners */
+}
+
+.joystick-container:hover {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+#divCamera {
+    width: 100%;
+    max-width: 100%;
+    background-color: black;
+    /* To visualize the resizing */
+    position: relative;
+    padding-top: 75%;
+    /* 4:3 Aspect Ratio (change to 56.25% for 16:9) */
+}
+
+#divCamera canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}

@@ -1,5 +1,4 @@
 <html>
-​
 
 <head>
     <!-- Bootstrap -->
@@ -28,15 +27,14 @@
     <script type="text/javascript" src="mjpegcanvas.min.js"></script>
 
 </head>
-​
 
 <body>
     <div id="app" class="container-fluid">
         <button class="btn btn-info mb-2" @click="toggleConnectionPanel">Toggle Connection Panel</button>
 
         <div class="row">
-            <!-- Connection Column -->
-            <div class="col-3 text-center" v-show="showConnectionPanel">
+            <!-- Floating Connection Column -->
+            <div class="col-3 text-center floating-panel" v-show="showConnectionPanel">
                 <div class="card mt-1">
                     <div class="card-body">
                         <h3>Connection status</h3>
@@ -69,22 +67,32 @@
                             <div class="card-header">
                                 <h4>Robot model</h4>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body position-relative">
                                 <div id="div3DViewer"></div>
+                                <div v-if="connected" class="joystick-container text-center">
+                                    <!-- <h2 class="text-center">Joystick</h2>
+                                    <hr>
+                                    <p>Some actions for the robot</p> -->
+                                    <div id="dragstartzone" @mousedown="startDrag" @mousemove="doDrag"></div>
+                                    <div id="dragCircle" :style="dragCircleStyle"></div>
+                                    <!-- <h3 class="text-left">Joystick values</h3>
+                                    <hr />
+                                    <p>Vertical: {{ joystick.vertical.toFixed(3) }}</p>
+                                    <br />
+                                    <p>Horizontal: {{ joystick.horizontal.toFixed(3) }}</p> -->
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-8">
-                        <div class="card mt-2">
+                        <div class="card mt-2" style="min-height: 500px;">
                             <div class="card-header">
                                 <h4>Camera</h4>
                             </div>
-                            <div class="card-body">
-                                <div class="col-md-12 col-sm-6 text-center">
-                                    <div id="divCamera"></div>
-                                </div>
+                            <div class="card-body" style="height: calc(100% - 56px);">
+                                <div id="divCamera"></div>
                             </div>
                         </div>
                     </div>
@@ -94,19 +102,8 @@
                                 <h4>Commands</h4>
                             </div>
                             <div class="card-body">
-                                <div class="card-body text-center">
-                                    <h2 class="text-center">Joystick</h2>
-                                    <hr>
-                                    <p>Some actions for the robot</p>
-                                    <div id="dragstartzone" @mousedown="startDrag" @mousemove="doDrag"></div>
-                                    <div id="dragCircle" :style="dragCircleStyle"></div>
-                                </div>
                                 <div class="card-body">
-                                    <h3 class="text-left">Joystick values</h3>
-                                    <hr />
-                                    <p>Vertical: {{ joystick.vertical.toFixed(3) }}</p>
-                                    <br />
-                                    <p>Horizontal: {{ joystick.horizontal.toFixed(3) }}</p>
+
                                 </div>
                                 <div>
                                     <label>Goal</label>
