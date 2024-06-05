@@ -3,11 +3,12 @@ var app = new Vue({
     // storing the state of the page
     data: {
         connected: false,
+        cameraReady: false,
         ros: null,
         logs: [],
         loading: false,
         showConnectionPanel: true,
-        rosbridge_address: 'wss://i-0534cd53ae70b422c.robotigniteacademy.com/0209b84c-f48b-4e08-a7ef-f97390784837/rosbridge/',
+        rosbridge_address: '',
         port: '9090',
 
         //action server
@@ -99,6 +100,7 @@ var app = new Vue({
                 this.clear3DViewer()
                 //reset cam
                 document.getElementById('divCamera').innerHTML = ''
+                this.cameraReady = false
             })
         },
 
@@ -353,6 +355,7 @@ var app = new Vue({
                 topic: topic,
                 ssl: true,
             });
+            this.cameraReady = true;
         },
     },
     mounted() {

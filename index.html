@@ -33,8 +33,8 @@
         <button class="btn btn-info mb-2" @click="toggleConnectionPanel">Toggle Connection Panel</button>
 
         <div class="row">
-            <!-- Floating Connection Column -->
-            <div class="col-3 text-center floating-panel" v-show="showConnectionPanel">
+            <!-- Connection Column -->
+            <div class="col-3 text-center" v-show="showConnectionPanel">
                 <div class="card mt-1">
                     <div class="card-body">
                         <h3>Connection status</h3>
@@ -42,7 +42,7 @@
                         <p class="text-success" v-if="connected">Connected!</p>
                         <label>ROSBridge address</label>
                         <br>
-                        <input type="text" v-model="rosbridge_address" />
+                        <input type="text" v-model="rosbridge_address" class="w-100 text-wrap" />
                         <br><br>
                         <button :disabled="loading" class="btn btn-danger" @click="disconnect"
                             v-if="connected">Disconnect!</button>
@@ -65,81 +65,80 @@
                     <div class="col-12">
                         <div class="card mt-2">
                             <div class="card-header">
-                                <h4>Robot model</h4>
+                                <h4>Naive Mapping</h4>
+                            </div>
+                            <div class="alert alert-warning alert-modern" role="alert">
+                                The red markers shown are hardcoded.
+                                This visualization shows where the robot thinks
+                                it is.
                             </div>
                             <div class="card-body position-relative">
                                 <div id="div3DViewer"></div>
                                 <div v-if="connected" class="joystick-container text-center">
-                                    <!-- <h2 class="text-center">Joystick</h2>
-                                    <hr>
-                                    <p>Some actions for the robot</p> -->
                                     <div id="dragstartzone" @mousedown="startDrag" @mousemove="doDrag"></div>
                                     <div id="dragCircle" :style="dragCircleStyle"></div>
-                                    <!-- <h3 class="text-left">Joystick values</h3>
-                                    <hr />
-                                    <p>Vertical: {{ joystick.vertical.toFixed(3) }}</p>
-                                    <br />
-                                    <p>Horizontal: {{ joystick.horizontal.toFixed(3) }}</p> -->
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-8">
-                        <div class="card mt-2" style="min-height: 500px;">
-                            <div class="card-header">
+                    <div class="col-md-8 col-12">
+                        <div class="card card-modern mt-2" style="min-height: 500px;">
+                            <div
+                                class="card-header card-header-modern d-flex justify-content-between align-items-center">
                                 <h4>Camera</h4>
+                                <div id="liveIndicator" class="live-indicator" v-show="cameraReady"></div>
                             </div>
-                            <div class="card-body" style="height: calc(100% - 56px);">
+                            <div class="card-body card-body-modern" style="height: calc(100% - 56px);">
                                 <div id="divCamera"></div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-4">
-                        <div class="card mt-2">
-                            <div class="card-header">
+                    <div class="col-md-4 col-12">
+                        <div class="card card-modern mt-2">
+                            <div class="card-header card-header-modern">
                                 <h4>Commands</h4>
                             </div>
-                            <div class="card-body">
-                                <div class="card-body">
-
-                                </div>
+                            <div class="card-body card-body-modern">
                                 <div>
-                                    <label>Goal</label>
-                                    <div>
-                                        <label>X</label>
-                                        <input type="number" v-model.number="action.goal.position.x" />
+                                    <label class="minimal-label">Goal</label>
+                                    <div class="mb-2">
+                                        <label class="minimal-label">X</label>
+                                        <input type="number" v-model.number="action.goal.position.x"
+                                            class="input-full-width" />
                                     </div>
-                                    <div>
-                                        <label>Y</label>
-                                        <input type="number" v-model.number="action.goal.position.y" />
+                                    <div class="mb-2">
+                                        <label class="minimal-label">Y</label>
+                                        <input type="number" v-model.number="action.goal.position.y"
+                                            class="input-full-width" />
                                     </div>
                                     <button :disabled="!connected || action.status.status == 1"
-                                        @click="sendGoal">Start</button>
+                                        class="btn btn-light-green" @click="sendGoal">Start</button>
                                     <button :disabled="!connected || ![1].includes(action.status.status)"
-                                        @click="cancelGoal">Cancel</button>
+                                        class="btn btn-light-red" @click="cancelGoal">Cancel</button>
                                 </div>
-                                <hr />
+                                <div class="divider"></div>
                                 <div>
-                                    <label class="text-muted">Feedback</label>
+                                    <label class="minimal-label text-muted">Feedback</label>
                                     <p>Position: {{ action.feedback.position }}</p>
                                     <p>State: {{ action.feedback.state }}</p>
                                 </div>
-                                <hr />
+                                <div class="divider"></div>
                                 <div>
-                                    <label class="text-muted">Result</label>
+                                    <label class="minimal-label text-muted">Result</label>
                                     <p>Succeeded? {{ action.result.success }}</p>
                                 </div>
-                                <hr />
+                                <div class="divider"></div>
                                 <div>
-                                    <label class="text-muted">Status</label>
+                                    <label class="minimal-label text-muted">Status</label>
                                     <p>{{ action.status.text }}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>

@@ -1,3 +1,23 @@
+/* Add this to your CSS file */
+.input-full-width {
+    width: 100%;
+    overflow-wrap: break-word;
+}
+
+/* Add this to your CSS file */
+.alert-modern {
+    background-color: #fff3cd;
+    color: #856404;
+    border: none;
+    border-left: 4px solid #856404;
+    border-radius: 4px;
+    padding: 4px;
+    font-size: 0.875rem;
+    margin-top: 10px;
+    margin-bottom: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 #dragstartzone {
     position: relative;
     display: inline-block;
@@ -60,4 +80,63 @@
     left: 0;
     width: 100%;
     height: 100%;
+}
+
+/* Add this to your CSS file */
+.live-indicator {
+    width: 12px;
+    height: 12px;
+    background-color: red;
+    border-radius: 50%;
+    animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {
+    50% {
+        opacity: 0;
+    }
+}
+
+/* Commands Card styling */
+.btn-light-green {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.btn-light-red {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.card-modern {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-header-modern {
+    background-color: #f8f9fa;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    padding: 16px 24px;
+}
+
+.card-body-modern {
+    padding: 24px;
+}
+
+.input-full-width {
+    width: 100%;
+    overflow-wrap: break-word;
+}
+
+.minimal-label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.divider {
+    border-top: 1px solid #e0e0e0;
+    margin: 20px 0;
 }
